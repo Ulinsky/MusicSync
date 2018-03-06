@@ -11,41 +11,35 @@ public class MainPanel extends JPanel implements ActionListener {
     private static final int HEIGHT = 800;
     private static final int WIDTH = 600;
     private JFileChooser chooser;
-    private String desktopPath, androidPath;
-    private JButton setDesktopPath, setAndroidPath, syncSongs;
-    private JLabel desktopPathLabel, androidPathLabel;
+    private String firstPath, secondPath;
+    private JButton setFirstPathButton, setSecondPathButton, syncSongsButton;
 
     public MainPanel() {
-        super(new BorderLayout());
-        setSize(new Dimension(HEIGHT, WIDTH));
-        JPanel upperPanel = new JPanel();
-        setDesktopPath = new JButton("Select desktop path");
-        upperPanel.add(setDesktopPath, BorderLayout.WEST);
-        setAndroidPath = new JButton("Select android path");
-        upperPanel.add(setAndroidPath, BorderLayout.EAST);
-        JPanel middlePanel = new JPanel();
-        desktopPathLabel = new JLabel("No desktop path set");
-        androidPathLabel = new JLabel("No android path set");
-        middlePanel.add(desktopPathLabel, BorderLayout.WEST);
-        middlePanel.add(androidPathLabel, BorderLayout.EAST);
-        setDesktopPath.addActionListener(this);
-        setAndroidPath.addActionListener(this);
-        add(upperPanel, BorderLayout.NORTH);
-        add(middlePanel, BorderLayout.CENTER);
-        JPanel lowerPanel = new JPanel();
-        syncSongs = new JButton("Sync songs");
-        syncSongs.addActionListener(actionEvent -> {
-            if (desktopPath == null || androidPath == null) {
-                new JOptionPane().showMessageDialog(new JButton("Ok"), "Either desktop or android paths were not set.");
+        super();
+        super.setSize(new Dimension(HEIGHT, WIDTH));
+
+        setFirstPathButton = new JButton("Select first path");
+        setSecondPathButton = new JButton("Select second path");
+        add(setFirstPathButton,BorderLayout.WEST);
+        add(setSecondPathButton, BorderLayout.EAST);
+
+
+        setFirstPathButton.addActionListener(this);
+        setSecondPathButton.addActionListener(this);
+
+        syncSongsButton = new JButton("Sync songs");
+        syncSongsButton.addActionListener(actionEvent -> {
+            if (firstPath == null || secondPath == null) {
+                new JOptionPane().showMessageDialog(new JButton("Ok"), "One of the paths were not set.");
                 return;
             }
-            List<File> desktopSongs = listFilesForFolder(new File(desktopPath));
-            List<File> androidSongs = listFilesForFolder(new File(androidPath));
-            copyMissing(desktopSongs, androidSongs);
-            copyMissing(androidSongs, desktopSongs);
+            List<File> firstSongList = listFilesForFolder(new File(firstPath));
+            List<File> secondSongList = listFilesForFolder(new File(secondPath));
+            copyMissing(firstSongList, secondSongList, secondPath);
+            copyMissing(secondSongList, firstSongList, firstPath);
         });
-        lowerPanel.add(syncSongs);
-        add(lowerPanel, BorderLayout.SOUTH);
+        add(syncSongsButton,BorderLayout.SOUTH);
+
     }
 
     public static void showGui() {
@@ -60,18 +54,16 @@ public class MainPanel extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == setDesktopPath || e.getSource() == setAndroidPath) {
+        if (e.getSource() == setFirstPathButton || e.getSource() == setSecondPathButton) {
             chooser = new JFileChooser();
             chooser.setAcceptAllFileFilterUsed(false);
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             chooser.setApproveButtonText("Select");
             int selection = chooser.showOpenDialog(null);
-            if (selection == JFileChooser.APPROVE_OPTION && e.getSource() == setDesktopPath) {
-                desktopPath = chooser.getSelectedFile().getPath();
-                desktopPathLabel.setText("Desktop path set");
-            } else if (selection == JFileChooser.APPROVE_OPTION && e.getSource() == setAndroidPath) {
-                androidPath = chooser.getSelectedFile().getPath();
-                androidPathLabel.setText("Android path set");
+            if (selection == JFileChooser.APPROVE_OPTION && e.getSource() == setFirstPathButton) {
+                firstPath = chooser.getSelectedFile().getPath();
+            } else if (selection == JFileChooser.APPROVE_OPTION && e.getSource() == setSecondPathButton) {
+                secondPath = chooser.getSelectedFile().getPath();
             }
         }
     }
@@ -89,9 +81,10 @@ public class MainPanel extends JPanel implements ActionListener {
         return songs;
     }
 
-    public void copyMissing(List<File> source, List<File> destination) {
+    public void copyMissing(List<File> source, List<File> destination, String secondPath) {
         boolean found;
-        if (source.isEmpty() || destination.isEmpty()) {
+        if (source.isEmpty()) {
+            new JOptionPane().showMessageDialog(new JButton("Ok"),"Source path contains no songs.");
             return;
         }
         int counter = 0;
@@ -105,7 +98,7 @@ public class MainPanel extends JPanel implements ActionListener {
             if (!found) {
                 try {
                     InputStream in = new FileInputStream(toCompare.getPath());
-                    String destPath = destination.get(0).getParent().concat("\\" + toCompare.getName());
+                    String destPath = secondPath.concat("\\"+toCompare.getName());
                     System.out.println(destPath);
                     OutputStream out = new FileOutputStream(destPath);
                     byte[] buf = new byte[1024];
