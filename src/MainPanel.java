@@ -14,13 +14,13 @@ public class MainPanel extends JPanel implements ActionListener {
     private String firstPath, secondPath;
     private JButton setFirstPathButton, setSecondPathButton, syncSongsButton;
 
-    public MainPanel() {
+    private MainPanel() {
         super();
         super.setSize(new Dimension(HEIGHT, WIDTH));
 
         setFirstPathButton = new JButton("Select first path");
         setSecondPathButton = new JButton("Select second path");
-        add(setFirstPathButton,BorderLayout.WEST);
+        add(setFirstPathButton, BorderLayout.WEST);
         add(setSecondPathButton, BorderLayout.EAST);
 
 
@@ -28,9 +28,9 @@ public class MainPanel extends JPanel implements ActionListener {
         setSecondPathButton.addActionListener(this);
 
         syncSongsButton = new JButton("Sync songs");
-        syncSongsButton.addActionListener(actionEvent -> {
+        syncSongsButton.addActionListener((ActionEvent actionEvent) -> {
             if (firstPath == null || secondPath == null) {
-                new JOptionPane().showMessageDialog(new JButton("Ok"), "One of the paths were not set.");
+                JOptionPane.showMessageDialog(new JButton("Ok"), "One of the paths were not set.");
                 return;
             }
             List<File> firstSongList = listFilesForFolder(new File(firstPath));
@@ -38,11 +38,11 @@ public class MainPanel extends JPanel implements ActionListener {
             copyMissing(firstSongList, secondSongList, secondPath);
             copyMissing(secondSongList, firstSongList, firstPath);
         });
-        add(syncSongsButton,BorderLayout.SOUTH);
+        add(syncSongsButton, BorderLayout.SOUTH);
 
     }
 
-    public static void showGui() {
+    static void drawGUI() {
         JFrame frame = new JFrame("MusicSync");
         frame.setSize(new Dimension(HEIGHT, WIDTH));
         frame.add(new MainPanel());
@@ -69,7 +69,11 @@ public class MainPanel extends JPanel implements ActionListener {
     }
 
 
-    public List<File> listFilesForFolder(final File folder) {
+    @SuppressWarnings("ConstantConditions")
+    private List<File> listFilesForFolder(final File folder) {
+        if (folder == null) {
+            return null;
+        }
         List<File> songs = new ArrayList<>();
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
@@ -81,10 +85,10 @@ public class MainPanel extends JPanel implements ActionListener {
         return songs;
     }
 
-    public void copyMissing(List<File> source, List<File> destination, String secondPath) {
+    private void copyMissing(List<File> source, List<File> destination, String secondPath) {
         boolean found;
         if (source.isEmpty()) {
-            new JOptionPane().showMessageDialog(new JButton("Ok"),"Source path contains no songs.");
+            JOptionPane.showMessageDialog(new JButton("Ok"), "Source path contains no songs.");
             return;
         }
         int counter = 0;
@@ -98,10 +102,10 @@ public class MainPanel extends JPanel implements ActionListener {
             if (!found) {
                 try {
                     InputStream in = new FileInputStream(toCompare.getPath());
-                    String destPath = secondPath.concat("\\"+toCompare.getName());
+                    String destPath = secondPath.concat("\\" + toCompare.getName());
                     System.out.println(destPath);
                     OutputStream out = new FileOutputStream(destPath);
-                    byte[] buf = new byte[1024];
+                    byte[] buf = new byte[(int) toCompare.length()];
                     int len;
                     while ((len = in.read(buf)) > 0) {
                         out.write(buf, 0, len);
@@ -113,8 +117,7 @@ public class MainPanel extends JPanel implements ActionListener {
                     System.out.println("Error when copying files");
                 }
             }
-
         }
-        new JOptionPane().showMessageDialog(new JButton("Ok"), counter == 1 ? counter + " song has been copied." : counter + " songs have been copied.");
+        JOptionPane.showMessageDialog(new JButton("Ok"), counter == 1 ? counter + " song has been copied." : counter + " songs have been copied.");
     }
 }
