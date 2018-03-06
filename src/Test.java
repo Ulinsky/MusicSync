@@ -13,8 +13,7 @@ public class Test {
            System.out.println(f.getName());
        }*/
 
-           MainPanel.showGui();
+        MainPanel.showGui();
 
-       }
-
+    }
 }

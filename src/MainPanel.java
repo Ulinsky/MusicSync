@@ -3,7 +3,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,9 +20,9 @@ public class MainPanel extends JPanel implements ActionListener {
         setSize(new Dimension(HEIGHT, WIDTH));
         JPanel upperPanel = new JPanel();
         setDesktopPath = new JButton("Select desktop path");
-        upperPanel.add(setDesktopPath, BorderLayout.NORTH);
+        upperPanel.add(setDesktopPath, BorderLayout.WEST);
         setAndroidPath = new JButton("Select android path");
-        upperPanel.add(setAndroidPath, BorderLayout.SOUTH);
+        upperPanel.add(setAndroidPath, BorderLayout.EAST);
         JPanel middlePanel = new JPanel();
         desktopPathLabel = new JLabel("No desktop path set");
         androidPathLabel = new JLabel("No android path set");
@@ -46,6 +45,7 @@ public class MainPanel extends JPanel implements ActionListener {
         frame.add(new MainPanel());
         frame.pack();
         frame.setVisible(true);
+        frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
@@ -68,9 +68,12 @@ public class MainPanel extends JPanel implements ActionListener {
             }
         } else if (e.getSource() == syncSongs) {
             if (desktopPath == null || androidPath == null) {
-                new JOptionPane().createDialog("Either desktop or android path was not selected");
+                System.out.println("Either desktop or android path was not set");
+                return;
             }
-
+            List<File> desktopSongs = listFilesForFolder(new File(desktopPath));
+            List<File> androidSongs = listFilesForFolder(new File(androidPath));
+            //TODO COMPARE AND COPY
         }
     }
     public List<File> listFilesForFolder(final File folder) {
@@ -78,7 +81,7 @@ public class MainPanel extends JPanel implements ActionListener {
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
                 listFilesForFolder(fileEntry);
-            } else {
+            } else if(fileEntry.getName().contains(".mp3")){
                songs.add(fileEntry);
             }
         }
