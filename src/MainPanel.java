@@ -2,7 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+import java.io.*;
+import java.nio.file.CopyOption;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,18 +75,56 @@ public class MainPanel extends JPanel implements ActionListener {
             }
             List<File> desktopSongs = listFilesForFolder(new File(desktopPath));
             List<File> androidSongs = listFilesForFolder(new File(androidPath));
-            //TODO COMPARE AND COPY
+            copyMissing(desktopSongs, androidSongs);
+            copyMissing(androidSongs, desktopSongs);
         }
     }
+
     public List<File> listFilesForFolder(final File folder) {
         List<File> songs = new ArrayList<>();
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
                 listFilesForFolder(fileEntry);
-            } else if(fileEntry.getName().contains(".mp3")){
-               songs.add(fileEntry);
+            } else if (fileEntry.getName().contains(".mp3")) {
+                songs.add(fileEntry);
             }
         }
         return songs;
+    }
+
+    public void copyMissing(List<File> source, List<File> destination) {
+        boolean found;
+        if (source.isEmpty() || destination.isEmpty()) {
+            return;
+        }
+
+        for (File toCompare : source) {
+            found = false;
+            for (File compareTo : destination) {
+                if (toCompare.getName().equals(compareTo.getName())) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                try {
+                    InputStream in = new FileInputStream(toCompare.getPath());
+                    String destPath = destination.get(0).getParent().concat("\\" + toCompare.getName());
+                     System.out.println(destPath);
+                    OutputStream out = new FileOutputStream(destPath);
+                    // Copy the bits from instream to outstream
+                    byte[] buf = new byte[1024];
+                    int len;
+                    while ((len = in.read(buf)) > 0) {
+                        out.write(buf, 0, len);
+                    }
+                    in.close();
+                    out.close();
+
+                } catch (Exception e) {
+                    System.out.println("Error when copying files");
+                }
+            }
+
+        }
     }
 }
