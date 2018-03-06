@@ -3,8 +3,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
-import java.nio.file.CopyOption;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +34,16 @@ public class MainPanel extends JPanel implements ActionListener {
         add(middlePanel, BorderLayout.CENTER);
         JPanel lowerPanel = new JPanel();
         syncSongs = new JButton("Sync songs");
-        syncSongs.addActionListener(this);
+        syncSongs.addActionListener(actionEvent -> {
+            if (desktopPath == null || androidPath == null) {
+                new JOptionPane().showMessageDialog(new JButton("Ok"), "Either desktop or android paths were not set.");
+                return;
+            }
+            List<File> desktopSongs = listFilesForFolder(new File(desktopPath));
+            List<File> androidSongs = listFilesForFolder(new File(androidPath));
+            copyMissing(desktopSongs, androidSongs);
+            copyMissing(androidSongs, desktopSongs);
+        });
         lowerPanel.add(syncSongs);
         add(lowerPanel, BorderLayout.SOUTH);
     }
@@ -62,23 +69,13 @@ public class MainPanel extends JPanel implements ActionListener {
             if (selection == JFileChooser.APPROVE_OPTION && e.getSource() == setDesktopPath) {
                 desktopPath = chooser.getSelectedFile().getPath();
                 desktopPathLabel.setText("Desktop path set");
-                System.out.println(desktopPath);
             } else if (selection == JFileChooser.APPROVE_OPTION && e.getSource() == setAndroidPath) {
                 androidPath = chooser.getSelectedFile().getPath();
                 androidPathLabel.setText("Android path set");
-                System.out.println(androidPath);
             }
-        } else if (e.getSource() == syncSongs) {
-            if (desktopPath == null || androidPath == null) {
-                System.out.println("Either desktop or android path was not set");
-                return;
-            }
-            List<File> desktopSongs = listFilesForFolder(new File(desktopPath));
-            List<File> androidSongs = listFilesForFolder(new File(androidPath));
-            copyMissing(desktopSongs, androidSongs);
-            copyMissing(androidSongs, desktopSongs);
         }
     }
+
 
     public List<File> listFilesForFolder(final File folder) {
         List<File> songs = new ArrayList<>();
@@ -97,7 +94,7 @@ public class MainPanel extends JPanel implements ActionListener {
         if (source.isEmpty() || destination.isEmpty()) {
             return;
         }
-
+        int counter = 0;
         for (File toCompare : source) {
             found = false;
             for (File compareTo : destination) {
@@ -109,9 +106,8 @@ public class MainPanel extends JPanel implements ActionListener {
                 try {
                     InputStream in = new FileInputStream(toCompare.getPath());
                     String destPath = destination.get(0).getParent().concat("\\" + toCompare.getName());
-                     System.out.println(destPath);
+                    System.out.println(destPath);
                     OutputStream out = new FileOutputStream(destPath);
-                    // Copy the bits from instream to outstream
                     byte[] buf = new byte[1024];
                     int len;
                     while ((len = in.read(buf)) > 0) {
@@ -119,12 +115,13 @@ public class MainPanel extends JPanel implements ActionListener {
                     }
                     in.close();
                     out.close();
-
+                    counter++;
                 } catch (Exception e) {
                     System.out.println("Error when copying files");
                 }
             }
 
         }
+        new JOptionPane().showMessageDialog(new JButton("Ok"), counter == 1 ? counter + " song has been copied." : counter + " songs have been copied.");
     }
 }
