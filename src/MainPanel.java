@@ -8,32 +8,44 @@ import java.util.List;
 
 
 public class MainPanel extends JPanel implements ActionListener {
-    private static final int HEIGHT = 800;
+    private static final int HEIGHT = 1200;
     private static final int WIDTH = 600;
     private String firstPath, secondPath;
     private JButton setFirstPathButton;
     private JButton setSecondPathButton;
-
+    private JButton syncSongsButton = new JButton("Sync songs");
+    private JTextField firstPathText;
+    private JTextField secondPathText;
     private MainPanel() {
         super();
         super.setSize(new Dimension(HEIGHT, WIDTH));
-
+        firstPathText=new JTextField("SourceFolder");
+        secondPathText=new  JTextField("destinationFolder");
+        this.add(firstPathText,BorderLayout.SOUTH);
+        this.add(secondPathText, BorderLayout.SOUTH);
         setFirstPathButton = new JButton("Select first path");
         setSecondPathButton = new JButton("Select second path");
-        add(setFirstPathButton, BorderLayout.WEST);
-        add(setSecondPathButton, BorderLayout.EAST);
+        add(setFirstPathButton, BorderLayout.NORTH);
+        add(setSecondPathButton, BorderLayout.NORTH);
 
 
         setFirstPathButton.addActionListener(this);
         setSecondPathButton.addActionListener(this);
-
-        JButton syncSongsButton = new JButton("Sync songs");
+        syncSongsButton.setEnabled(false);
+        syncSongsButton.setBackground(Color.RED);
+        syncSongsButton.setText("First choose 2 folders");
         syncSongsButton.addActionListener((ActionEvent actionEvent) -> {
-            if (firstPath == null || secondPath == null) {
+               	if (firstPath == null || secondPath == null) {
                 //error case if no path was selected
-                JOptionPane.showMessageDialog(new JButton("Ok"), "One of the paths were not set.");
-                return;
-            }
+               		//Button is disabled so no nedd for a Dialoge
+               		JOptionPane.showMessageDialog(new JButton("Ok"), "One of the paths were not set.");
+                
+            	return;
+            }else{
+            	
+                syncSongsButton.setText("Sync");
+                
+            
             //making a list of .mp3 files found in the set paths
             List<File> firstSongList = listFilesForFolder(new File(firstPath));
             List<File> secondSongList = listFilesForFolder(new File(secondPath));
@@ -41,7 +53,8 @@ public class MainPanel extends JPanel implements ActionListener {
             copyMissing(firstSongList, secondSongList, secondPath);
             //copies a file found in second ,but not the first list
             copyMissing(secondSongList, firstSongList, firstPath);
-        });
+            }
+            });
         add(syncSongsButton, BorderLayout.SOUTH);
 
     }
@@ -49,12 +62,12 @@ public class MainPanel extends JPanel implements ActionListener {
     static void drawGUI() {
 
         //renders the GUI
-        JFrame frame = new JFrame("MusicSync");
+         JFrame frame = new JFrame("MusicSync");
         frame.setSize(new Dimension(HEIGHT, WIDTH));
         frame.add(new MainPanel());
         frame.pack();
         frame.setVisible(true);
-        frame.setResizable(false);
+        frame.setResizable(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
@@ -70,8 +83,10 @@ public class MainPanel extends JPanel implements ActionListener {
             int selection = chooser.showOpenDialog(null);
             if (selection == JFileChooser.APPROVE_OPTION && e.getSource() == setFirstPathButton) {
                 firstPath = chooser.getSelectedFile().getPath();  //get first string
+                firstPathText.setText(chooser.getSelectedFile().getPath());
             } else if (selection == JFileChooser.APPROVE_OPTION && e.getSource() == setSecondPathButton) {
                 secondPath = chooser.getSelectedFile().getPath(); //get second string
+                secondPathText.setText(chooser.getSelectedFile().getPath());
             }
         }
     }
