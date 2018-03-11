@@ -23,22 +23,29 @@ public class MusicSyncView extends JPanel implements ActionListener {
     private MusicSyncView() {
         super(new BorderLayout());
         super.setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        firstPathText = new JTextField("First folder");
-        secondPathText = new JTextField("Second folder");
+        firstPathText = new JTextField("First folder",15);
+        secondPathText = new JTextField("Second folder",15);
+        firstPathText.setEditable(false);
+        secondPathText.setEditable(false);
+
         upperHalf= new JPanel(new BorderLayout());
         lowerHalf= new JPanel();
         upperHalf.setBorder(BorderFactory.createEmptyBorder(10,100,0,100));
         upperHalf.add(firstPathText,BorderLayout.LINE_START );
         upperHalf.add(secondPathText,BorderLayout.LINE_END);
+
         setFirstPathButton = new JButton("Select first path");
         setSecondPathButton = new JButton("Select second path");
         lowerHalf.add(setFirstPathButton, BorderLayout.NORTH);
         lowerHalf.add(setSecondPathButton, BorderLayout.NORTH);
+
         setFirstPathButton.addActionListener(this);
         setSecondPathButton.addActionListener(this);
+
         syncSongsButton.setEnabled(false);
         syncSongsButton.setBackground(Color.RED);
         syncSongsButton.setText("First choose 2 folders");
+
         syncSongsButton.addActionListener((ActionEvent actionEvent) -> {
                //making a list of .mp3 files found in the set paths
                 List<File> firstSongList = listFilesForFolder(new File(firstPath));
@@ -52,7 +59,6 @@ public class MusicSyncView extends JPanel implements ActionListener {
         lowerHalf.add(syncSongsButton, BorderLayout.SOUTH);
         this.add(upperHalf,BorderLayout.NORTH);
         this.add(lowerHalf,BorderLayout.SOUTH);
-
     }
 
     public static void drawGUI() {
