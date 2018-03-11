@@ -1,3 +1,5 @@
+package musicsync;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -7,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class MainPanel extends JPanel implements ActionListener {
-    private static final int HEIGHT = 1200;
+public class MusicSyncView extends JPanel implements ActionListener {
+    private static final int HEIGHT = 100;
     private static final int WIDTH = 600;
     private String firstPath, secondPath;
     private JButton setFirstPathButton;
@@ -16,58 +18,52 @@ public class MainPanel extends JPanel implements ActionListener {
     private JButton syncSongsButton = new JButton("Sync songs");
     private JTextField firstPathText;
     private JTextField secondPathText;
-    private MainPanel() {
-        super();
-        super.setSize(new Dimension(HEIGHT, WIDTH));
-        firstPathText=new JTextField("SourceFolder");
-        secondPathText=new  JTextField("destinationFolder");
-        this.add(firstPathText,BorderLayout.SOUTH);
-        this.add(secondPathText, BorderLayout.SOUTH);
+    private JPanel upperHalf,lowerHalf;
+
+    private MusicSyncView() {
+        super(new BorderLayout());
+        super.setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        firstPathText = new JTextField("First folder");
+        secondPathText = new JTextField("Second folder");
+        upperHalf= new JPanel(new BorderLayout());
+        lowerHalf= new JPanel();
+        upperHalf.setBorder(BorderFactory.createEmptyBorder(10,100,0,100));
+        upperHalf.add(firstPathText,BorderLayout.LINE_START );
+        upperHalf.add(secondPathText,BorderLayout.LINE_END);
         setFirstPathButton = new JButton("Select first path");
         setSecondPathButton = new JButton("Select second path");
-        add(setFirstPathButton, BorderLayout.NORTH);
-        add(setSecondPathButton, BorderLayout.NORTH);
-
-
+        lowerHalf.add(setFirstPathButton, BorderLayout.NORTH);
+        lowerHalf.add(setSecondPathButton, BorderLayout.NORTH);
         setFirstPathButton.addActionListener(this);
         setSecondPathButton.addActionListener(this);
         syncSongsButton.setEnabled(false);
         syncSongsButton.setBackground(Color.RED);
         syncSongsButton.setText("First choose 2 folders");
         syncSongsButton.addActionListener((ActionEvent actionEvent) -> {
-               	if (firstPath == null || secondPath == null) {
-                //error case if no path was selected
-               		//Button is disabled so no nedd for a Dialoge
-               		JOptionPane.showMessageDialog(new JButton("Ok"), "One of the paths were not set.");
-                
-            	return;
-            }else{
-            	
-                syncSongsButton.setText("Sync");
-                
-            
-            //making a list of .mp3 files found in the set paths
-            List<File> firstSongList = listFilesForFolder(new File(firstPath));
-            List<File> secondSongList = listFilesForFolder(new File(secondPath));
-            //copies a file found in first ,but not the second list
-            copyMissing(firstSongList, secondSongList, secondPath);
-            //copies a file found in second ,but not the first list
-            copyMissing(secondSongList, firstSongList, firstPath);
-            }
-            });
-        add(syncSongsButton, BorderLayout.SOUTH);
+               //making a list of .mp3 files found in the set paths
+                List<File> firstSongList = listFilesForFolder(new File(firstPath));
+                List<File> secondSongList = listFilesForFolder(new File(secondPath));
+                //copies a file found in first ,but not the second list
+                copyMissing(firstSongList, secondSongList, secondPath);
+                //copies a file found in second ,but not the first list
+                copyMissing(secondSongList, firstSongList, firstPath);
+
+        });
+        lowerHalf.add(syncSongsButton, BorderLayout.SOUTH);
+        this.add(upperHalf,BorderLayout.NORTH);
+        this.add(lowerHalf,BorderLayout.SOUTH);
 
     }
 
-    static void drawGUI() {
+    public static void drawGUI() {
 
         //renders the GUI
-         JFrame frame = new JFrame("MusicSync");
-        frame.setSize(new Dimension(HEIGHT, WIDTH));
-        frame.add(new MainPanel());
+        JFrame frame = new JFrame("MusicSync");
+        frame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        frame.add(new MusicSyncView());
         frame.pack();
         frame.setVisible(true);
-        frame.setResizable(true);
+        frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
@@ -87,6 +83,11 @@ public class MainPanel extends JPanel implements ActionListener {
             } else if (selection == JFileChooser.APPROVE_OPTION && e.getSource() == setSecondPathButton) {
                 secondPath = chooser.getSelectedFile().getPath(); //get second string
                 secondPathText.setText(chooser.getSelectedFile().getPath());
+            }
+            if(firstPath!=null&&secondPath!=null){
+                syncSongsButton.setEnabled(true);
+                syncSongsButton.setText("Sync");
+                syncSongsButton.setBackground(Color.WHITE);
             }
         }
     }
@@ -147,4 +148,5 @@ public class MainPanel extends JPanel implements ActionListener {
         }
         JOptionPane.showMessageDialog(new JButton("Ok"), counter == 1 ? counter + " song has been copied." : counter + " songs have been copied.");
     }
+
 }
