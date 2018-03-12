@@ -5,14 +5,15 @@ import jmtp.PortableDeviceObject;
 import jmtp.PortableDeviceStorageObject;
 import musicsync.MusicSyncView;
 
+import java.io.File;
+
 public class Main {
 
         public static void main(String[] args) throws Throwable {
             MusicSyncView.drawGUI();
-          // jMTPeMethodTest();
         }
 
-    private static void jMTPeMethodTest()
+    /*private static void jMTPeMethodTest()
     {
         PortableDeviceManager manager = new PortableDeviceManager();
         if(manager.getDevices().length==0){
@@ -37,8 +38,9 @@ public class Main {
                 }
             }
         }
+
         manager.getDevices()[0].close();
-    }
+    }*/
 
 }
 

@@ -1,5 +1,7 @@
 package musicsync;
 
+import jmtp.*;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -18,21 +20,22 @@ public class MusicSyncView extends JPanel implements ActionListener {
     private JButton syncSongsButton = new JButton("Sync songs");
     private JTextField firstPathText;
     private JTextField secondPathText;
-    private JPanel upperHalf,lowerHalf;
+    private JPanel upperHalf, lowerHalf;
+    StringBuilder test = new StringBuilder();
 
     private MusicSyncView() {
         super(new BorderLayout());
         super.setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        firstPathText = new JTextField("First folder",15);
-        secondPathText = new JTextField("Second folder",15);
+        firstPathText = new JTextField("First folder", 15);
+        secondPathText = new JTextField("Second folder", 15);
         firstPathText.setEditable(false);
         secondPathText.setEditable(false);
 
-        upperHalf= new JPanel(new BorderLayout());
-        lowerHalf= new JPanel();
-        upperHalf.setBorder(BorderFactory.createEmptyBorder(10,100,0,100));
-        upperHalf.add(firstPathText,BorderLayout.LINE_START );
-        upperHalf.add(secondPathText,BorderLayout.LINE_END);
+        upperHalf = new JPanel(new BorderLayout());
+        lowerHalf = new JPanel();
+        upperHalf.setBorder(BorderFactory.createEmptyBorder(10, 100, 0, 100));
+        upperHalf.add(firstPathText, BorderLayout.LINE_START);
+        upperHalf.add(secondPathText, BorderLayout.LINE_END);
 
         setFirstPathButton = new JButton("Select first path");
         setSecondPathButton = new JButton("Select second path");
@@ -40,25 +43,26 @@ public class MusicSyncView extends JPanel implements ActionListener {
         lowerHalf.add(setSecondPathButton, BorderLayout.NORTH);
 
         setFirstPathButton.addActionListener(this);
-        setSecondPathButton.addActionListener(this);
+        //setSecondPathButton.addActionListener(this);
+        setSecondPathButton.addActionListener(actionEvent -> printSongsPhone());
 
         syncSongsButton.setEnabled(false);
         syncSongsButton.setBackground(Color.RED);
         syncSongsButton.setText("First choose 2 folders");
 
         syncSongsButton.addActionListener((ActionEvent actionEvent) -> {
-               //making a list of .mp3 files found in the set paths
-                List<File> firstSongList = listFilesForFolder(new File(firstPath));
-                List<File> secondSongList = listFilesForFolder(new File(secondPath));
-                //copies a file found in first ,but not the second list
-                copyMissing(firstSongList, secondSongList, secondPath);
-                //copies a file found in second ,but not the first list
-                copyMissing(secondSongList, firstSongList, firstPath);
+            //making a list of .mp3 files found in the set paths
+            List<File> firstSongList = listFilesForFolder(new File(firstPath));
+            List<File> secondSongList = listFilesForFolder(new File(secondPath));
+            //copies a file found in first ,but not the second list
+            copyMissing(firstSongList, secondSongList, secondPath);
+            //copies a file found in second ,but not the first list
+            copyMissing(secondSongList, firstSongList, firstPath);
 
         });
         lowerHalf.add(syncSongsButton, BorderLayout.SOUTH);
-        this.add(upperHalf,BorderLayout.NORTH);
-        this.add(lowerHalf,BorderLayout.SOUTH);
+        this.add(upperHalf, BorderLayout.NORTH);
+        this.add(lowerHalf, BorderLayout.SOUTH);
     }
 
     public static void drawGUI() {
@@ -90,7 +94,7 @@ public class MusicSyncView extends JPanel implements ActionListener {
                 secondPath = chooser.getSelectedFile().getPath(); //get second string
                 secondPathText.setText(chooser.getSelectedFile().getPath());
             }
-            if(firstPath!=null&&secondPath!=null){
+            if (firstPath != null && secondPath != null) {
                 syncSongsButton.setEnabled(true);
                 syncSongsButton.setText("Sync");
                 syncSongsButton.setBackground(Color.WHITE);
@@ -153,6 +157,54 @@ public class MusicSyncView extends JPanel implements ActionListener {
             }
         }
         JOptionPane.showMessageDialog(new JButton("Ok"), counter == 1 ? counter + " song has been copied." : counter + " songs have been copied.");
+    }
+
+    private void printSongsPhone() {
+        {
+            PortableDeviceManager manager = new PortableDeviceManager();
+            if (manager.getDevices().length == 0) {
+                JOptionPane.showMessageDialog(new JButton("Ok"), "No connected android device found.");
+                return;
+            }
+            //First connected device (support multiple in future?)
+            PortableDevice device = manager.getDevices()[0];
+            // Connect to USB device
+            device.open();
+            PortableDeviceFolderObject musicFolder = findMusicFolder(device);
+            if (musicFolder == null) {
+                JOptionPane.showMessageDialog(new JButton("Ok"), "No music folder found.");
+                return;
+            }
+            //Print all songs from android device
+            PortableDeviceObject[] songs =musicFolder.getChildObjects();
+            for (PortableDeviceObject song : songs) {
+                System.out.println(song.getName());
+
+            }
+            //End the connection
+            manager.getDevices()[0].close();
+        }
+
+
+    }
+
+    private PortableDeviceFolderObject findMusicFolder(PortableDevice device) {
+        //Iterate through root folders
+        for (PortableDeviceObject objects : device.getRootObjects()) {
+            // If the object is a storage object
+            if (objects instanceof PortableDeviceStorageObject) {
+                PortableDeviceStorageObject storage = (PortableDeviceStorageObject) objects;
+                //Iterate through sub-folders
+                for (PortableDeviceObject o2 : storage.getChildObjects()) {
+                    if (o2.getName().equals("Music")) {
+                        //Found the music folder
+                        return (PortableDeviceFolderObject) o2;
+                    }
+                }
+            }
+        }
+        //No music folder was found
+        return null;
     }
 
 }
