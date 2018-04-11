@@ -1,11 +1,13 @@
 package musicsync;
 
+import be.derycke.pieter.com.COMException;
 import jmtp.*;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.*;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,8 +59,9 @@ public class MusicSyncView extends JPanel {
         });
 
         syncSongsButton.addActionListener((ActionEvent actionEvent) -> {
-            //showMessageDialog(null, "Not implemented yet");
-            List<File> desktopSongs = listFilesForFolder(new File(desktopPath.getText()));
+            showMessageDialog(null, "Not implemented yet");
+            //List<File> desktopSongs = listFilesForFolder(new File(desktopPath.getText())); //TODO MAKE LIST OF ANDROID SONGS
+            //TODO COMPARE TWO LISTS; ADD THE MISSING SONGS TO THE DESKTOP AND ANDROID FOLDER
         });
     }
 
@@ -82,14 +85,13 @@ public class MusicSyncView extends JPanel {
         List<File> songs = new ArrayList<>();
         for (final File fileEntry : folder.listFiles()) { //for each file in the folder
             if (fileEntry.isDirectory()) { //another folder found, recursive call
-                listFilesForFolder(fileEntry);
+                songs.addAll(listFilesForFolder(fileEntry));
             } else if (fileEntry.getName().contains(".mp3")) {  //only files with .mp3 accepted
                 songs.add(fileEntry);
             }
         }
         return songs;
     }
-
 
 
     private String findAndroidPath() {
@@ -107,9 +109,32 @@ public class MusicSyncView extends JPanel {
             showMessageDialog(null, "No music folder found.");
             return null;
         }
-        //End the connection
+
+        PortableDeviceObject[] songs = musicFolder.getChildObjects();
+       /* for (PortableDeviceObject song : songs) {
+            copyFileFromDeviceToComputerFolder(song,device,desktopPath);
+            }*/ //TODO EXPORT TO ANOTHER METHOD
         manager.getDevices()[0].close();
         return device.getFriendlyName() + "\\" + musicFolder.getParent().getName() + "\\" + musicFolder.getName(); //TODO make it NOT hardcoded
+    }
+    private static void copyFileFromComputerToDeviceFolder(PortableDeviceFolderObject targetFolder)
+    {
+                BigInteger bigInteger1 = new BigInteger("123456789");
+                File file = new File("C:\\GettingJMTP.pdf");
+                try {
+                        targetFolder.addAudioObject(file, "jj", "jj", bigInteger1);
+                    } catch (Exception e) {
+                        System.out.println("Exception e = " + e);
+                    }
+    }
+
+    private static void copyFileFromDeviceToComputerFolder(PortableDeviceObject pDO, PortableDevice device, String path) {
+        PortableDeviceToHostImpl32 copy = new PortableDeviceToHostImpl32();
+        try {
+            copy.copyFromPortableDeviceToHost(pDO.getID(), path, device);
+        } catch (COMException ex) {
+            ex.printStackTrace();
+        }
     }
 
     private PortableDeviceFolderObject findMusicFolder(PortableDevice device) {
