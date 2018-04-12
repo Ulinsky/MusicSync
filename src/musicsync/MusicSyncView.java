@@ -9,14 +9,16 @@ import java.awt.event.ActionEvent;
 import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static javax.swing.JOptionPane.showMessageDialog;
 
 
 public class MusicSyncView extends JPanel {
-    private static final int HEIGHT = 100;
+    private static final int HEIGHT = 600;
     private static final int WIDTH = 700;
+    private static final int DEFAULT_DEVICE_INDEX = 0;
 
     private MusicSyncView() {
         super(new BorderLayout());
@@ -27,6 +29,16 @@ public class MusicSyncView extends JPanel {
         androidPath.setEditable(false);
 
         JPanel upperHalf = new JPanel(new BorderLayout());
+        JPanel middle = new JPanel(new BorderLayout());
+        JTextPane desktopSongsPreview= new JTextPane();
+        JTextPane androidSongsPreview= new JTextPane();
+        desktopSongsPreview.setEditable(false);
+        androidSongsPreview.setEditable(false);
+        middle.setBorder(BorderFactory.createEmptyBorder(10, 50, 0, 50));
+        desktopSongsPreview.setPreferredSize(new Dimension((int)(WIDTH*0.4),(int)(HEIGHT*0.6)));
+        androidSongsPreview.setPreferredSize(new Dimension((int)(WIDTH*0.4),(int)(HEIGHT*0.6)));
+        middle.add(desktopSongsPreview,BorderLayout.LINE_START);
+        middle.add(androidSongsPreview,BorderLayout.LINE_END);
         JPanel lowerHalf = new JPanel();
         upperHalf.setBorder(BorderFactory.createEmptyBorder(10, 50, 0, 50));
         upperHalf.add(desktopPath, BorderLayout.LINE_START);
@@ -42,6 +54,7 @@ public class MusicSyncView extends JPanel {
         lowerHalf.add(syncSongsButton, BorderLayout.LINE_END);
         this.add(upperHalf, BorderLayout.NORTH);
         this.add(lowerHalf, BorderLayout.SOUTH);
+        this.add(middle,BorderLayout.CENTER);
 
         setDesktopPathButton.addActionListener(actionEvent -> {
             JFileChooser chooser = new JFileChooser();
@@ -51,7 +64,7 @@ public class MusicSyncView extends JPanel {
             int selection = chooser.showOpenDialog(null);
             if (selection == JFileChooser.APPROVE_OPTION) {
                 desktopPath.setText(chooser.getSelectedFile().getPath());
-                androidPath.setText(findAndroidPath());
+                androidPath.setText(findAndroidPath(DEFAULT_DEVICE_INDEX));
                 syncSongsButton.setBackground(Color.WHITE);
                 syncSongsButton.setText("Sync songs");
                 syncSongsButton.setEnabled(true);
@@ -59,8 +72,26 @@ public class MusicSyncView extends JPanel {
         });
 
         syncSongsButton.addActionListener((ActionEvent actionEvent) -> {
-            showMessageDialog(null, "Not implemented yet");
-            //List<File> desktopSongs = listFilesForFolder(new File(desktopPath.getText())); //TODO MAKE LIST OF ANDROID SONGS
+            List<File> desktopSongs = listFilesForDesktopFolder(new File(desktopPath.getText()));
+            List<PortableDeviceObject> androidSongs = listFilesForAndroidFolder(DEFAULT_DEVICE_INDEX);
+            if (desktopSongs != null) {
+                StringBuilder sb = new StringBuilder();
+                for (File song:desktopSongs){
+                    sb.append(song.getName()).append("\n");
+                }
+                desktopSongsPreview.setText(sb.toString());
+            }else{
+               desktopSongsPreview.setText("No songs found.");
+            }
+            if (androidSongs != null) {
+                StringBuilder sb = new StringBuilder();
+                for (PortableDeviceObject song:androidSongs){
+                    sb.append(song.getName()).append("\n");
+                }
+                androidSongsPreview.setText(sb.toString());
+            }else{
+                desktopSongsPreview.setText("No songs found.");
+            }
             //TODO COMPARE TWO LISTS; ADD THE MISSING SONGS TO THE DESKTOP AND ANDROID FOLDER
         });
     }
@@ -71,21 +102,22 @@ public class MusicSyncView extends JPanel {
         frame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
         frame.add(new MusicSyncView());
         frame.pack();
-        frame.setVisible(true);
+        frame.setLocation(300, 100);
+        frame.setSize(new Dimension(WIDTH, HEIGHT));
         frame.setResizable(false);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
     }
 
     @SuppressWarnings("ConstantConditions")
-    private List<File> listFilesForFolder(final File folder) {
+    private List<File> listFilesForDesktopFolder(File folder) {
         if (folder == null) {
-            showMessageDialog(null, "Error.");
+            showMessageDialog(null, "Error, folder does not exist.");
             return null;
         }
         List<File> songs = new ArrayList<>();
-        for (final File fileEntry : folder.listFiles()) { //for each file in the folder
+        for (File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) { //another folder found, recursive call
-                songs.addAll(listFilesForFolder(fileEntry));
+                songs.addAll(listFilesForDesktopFolder(fileEntry));
             } else if (fileEntry.getName().contains(".mp3")) {  //only files with .mp3 accepted
                 songs.add(fileEntry);
             }
@@ -93,67 +125,84 @@ public class MusicSyncView extends JPanel {
         return songs;
     }
 
-
-    private String findAndroidPath() {
-        PortableDeviceManager manager = new PortableDeviceManager();
-        if (manager.getDevices().length == 0) {
+    private List<PortableDeviceObject> listFilesForAndroidFolder(int deviceIndex) {
+        PortableDevice device = findDevice(deviceIndex);
+        if (device == null) {
             showMessageDialog(null, "No connected android device found.");
             return null;
         }
-        //First connected device (support multiple in future?)
-        PortableDevice device = manager.getDevices()[0];
-        // Connect to USB device
-        device.open();
         PortableDeviceFolderObject musicFolder = findMusicFolder(device);
         if (musicFolder == null) {
             showMessageDialog(null, "No music folder found.");
             return null;
         }
-
-        PortableDeviceObject[] songs = musicFolder.getChildObjects();
-       /* for (PortableDeviceObject song : songs) {
-            copyFileFromDeviceToComputerFolder(song,device,desktopPath);
-            }*/ //TODO EXPORT TO ANOTHER METHOD
-        manager.getDevices()[0].close();
-        return device.getFriendlyName() + "\\" + musicFolder.getParent().getName() + "\\" + musicFolder.getName(); //TODO make it NOT hardcoded
-    }
-    private static void copyFileFromComputerToDeviceFolder(PortableDeviceFolderObject targetFolder)
-    {
-                BigInteger bigInteger1 = new BigInteger("123456789");
-                File file = new File("C:\\GettingJMTP.pdf");
-                try {
-                        targetFolder.addAudioObject(file, "jj", "jj", bigInteger1);
-                    } catch (Exception e) {
-                        System.out.println("Exception e = " + e);
-                    }
+        return Arrays.asList(musicFolder.getChildObjects());
     }
 
-    private static void copyFileFromDeviceToComputerFolder(PortableDeviceObject pDO, PortableDevice device, String path) {
+
+    private String findAndroidPath(int deviceIndex) {
+        PortableDevice device = findDevice(deviceIndex);
+        if (device == null) {
+            showMessageDialog(null, "No connected android device found.");
+            return null;
+        }
+        PortableDeviceFolderObject musicFolder = findMusicFolder(device);
+        if (musicFolder == null) {
+            showMessageDialog(null, "No music folder found.");
+            return null;
+        }
+        //TODO MAKE IT NOT HARDCODED
+        return device.getFriendlyName() + "\\" + musicFolder.getParent().getName() + "\\" + musicFolder.getName();
+    }
+
+
+    private static void copyFileFromComputerToDeviceFolder(PortableDeviceFolderObject targetFolder) {
+        BigInteger bigInteger1 = new BigInteger("123456789");
+        File file = new File("C:\\GettingJMTP.pdf");
+        try {
+            targetFolder.addAudioObject(file, "jj", "jj", bigInteger1);
+        } catch (Exception e) {
+            System.out.println("Exception e = " + e);
+        }
+    }
+
+    private static void copyFileFromDeviceToComputerFolder(PortableDeviceObject song, PortableDevice device, String target) {
+        device.open();
         PortableDeviceToHostImpl32 copy = new PortableDeviceToHostImpl32();
         try {
-            copy.copyFromPortableDeviceToHost(pDO.getID(), path, device);
+            copy.copyFromPortableDeviceToHost(song.getID(), target, device);
         } catch (COMException ex) {
             ex.printStackTrace();
+        }finally {
+            device.close();
         }
     }
 
     private PortableDeviceFolderObject findMusicFolder(PortableDevice device) {
+        device.open();
         //Iterate through root folders
         for (PortableDeviceObject objects : device.getRootObjects()) {
             // If the object is a storage object
             if (objects instanceof PortableDeviceStorageObject) {
                 PortableDeviceStorageObject storage = (PortableDeviceStorageObject) objects;
                 //Iterate through sub-folders
-                for (PortableDeviceObject o2 : storage.getChildObjects()) {
+                for (PortableDeviceObject o2 : storage.getChildObjects()) { //TODO TUNNEL THROUGH ALL SUBFOLDERS
                     if (o2.getName().equals("Music")) {
                         //Found the music folder
+                        device.close();
                         return (PortableDeviceFolderObject) o2;
                     }
                 }
             }
         }
+        device.close();
         //No music folder was found
         return null;
+    }
+
+    private PortableDevice findDevice(int deviceIndex) {
+        PortableDeviceManager manager = new PortableDeviceManager();
+        return manager.getDevices().length == 0 ? null : manager.getDevices()[deviceIndex];
     }
 
 }
