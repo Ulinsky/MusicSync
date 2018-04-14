@@ -1,19 +1,16 @@
 package musicsync;
 
-import oracle.jrockit.jfr.JFR;
-
 import javax.swing.*;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
-
-import static javax.swing.JOptionPane.showMessageDialog;
 
 
 public class MusicSyncView extends JPanel {
 
     private static final int HEIGHT = 500;
     private static final int WIDTH = 700;
+    private static final int DESKTOP_PATH_FLAG_POS = 0;
+    private static final int ANDROID_PATH_FLAG_POS = 1;
 
 
     private MusicSyncView() {
@@ -22,6 +19,7 @@ public class MusicSyncView extends JPanel {
 
         JTextField desktopPath = new JTextField("Desktop music folder", 25);
         JTextField androidPath = new JTextField("Android music folder", 18);
+        boolean[] pathFlags = {false, false};
         desktopPath.setEditable(false);
         androidPath.setEditable(false);
 
@@ -44,21 +42,24 @@ public class MusicSyncView extends JPanel {
         middle.add(desktopPreview, BorderLayout.LINE_START);
         middle.add(androidPreview, BorderLayout.LINE_END);
 
-        JButton setDesktopPathButton = new JButton("Select desktop path");
+        JButton setDesktopFolderButton = new JButton("Select desktop folder");
+        JButton setAndroidFolderButton = new JButton("Select android folder");
         JButton syncSongsButton = new JButton("First choose a folder");
+
         syncSongsButton.setEnabled(false);
         syncSongsButton.setBackground(Color.RED);
 
         JPanel bottom = new JPanel();
         bottom.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
-        bottom.add(setDesktopPathButton, BorderLayout.LINE_START);
+        bottom.add(setDesktopFolderButton, BorderLayout.LINE_START);
+        bottom.add(setAndroidFolderButton, BorderLayout.CENTER);
         bottom.add(syncSongsButton, BorderLayout.LINE_END);
 
         this.add(top, BorderLayout.NORTH);
         this.add(middle, BorderLayout.CENTER);
         this.add(bottom, BorderLayout.SOUTH);
 
-        setDesktopPathButton.addActionListener(actionEvent -> {
+        setDesktopFolderButton.addActionListener(actionEvent -> {
             JFileChooser chooser = new JFileChooser();
             chooser.setAcceptAllFileFilterUsed(false);
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY); //choose only folders
@@ -66,8 +67,21 @@ public class MusicSyncView extends JPanel {
             int selection = chooser.showOpenDialog(null);
             if (selection == JFileChooser.APPROVE_OPTION) {
                 desktopPath.setText(chooser.getSelectedFile().getPath());
+                pathFlags[DESKTOP_PATH_FLAG_POS] = true;
+                if (pathFlags[ANDROID_PATH_FLAG_POS]) {
+                    syncSongsButton.setBackground(Color.WHITE);
+                    syncSongsButton.setText("Sync songs");
+                    syncSongsButton.setEnabled(true);
+                }
+            }
+        });
 
-
+        setAndroidFolderButton.addActionListener(actionEvent -> {
+            AndroidBrowserView a = new AndroidBrowserView();
+            a.drawGui();
+            //TODO implement selection like mentioned in https://stackoverflow.com/questions/37629017/java-dialog-with-jlist-and-option-buttons
+            pathFlags[ANDROID_PATH_FLAG_POS] = true;
+            if (pathFlags[DESKTOP_PATH_FLAG_POS]) {
                 syncSongsButton.setBackground(Color.WHITE);
                 syncSongsButton.setText("Sync songs");
                 syncSongsButton.setEnabled(true);
@@ -75,10 +89,9 @@ public class MusicSyncView extends JPanel {
         });
 
         syncSongsButton.addActionListener((ActionEvent actionEvent) -> {
-            new AndroidBrowserView().getFrame();
-
-           // FileManager.sync(desktopPath.getText(), null); //TODO implements JList for selecting folder
+            // FileManager.sync(desktopPath.getText(),null);
         });
+
     }
 
     public static void drawGUI() {

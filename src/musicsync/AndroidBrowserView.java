@@ -5,26 +5,22 @@ import jmtp.PortableDeviceObject;
 import javax.swing.*;
 import java.awt.*;
 
-public class AndroidBrowserView {
-    private static JFrame frame;
-    private static JButton upBtn;
-    private static JButton downBtn;
-    private static JButton selectBtn;
-    private static AndroidBrowserModel model;
-    private static AndroidBrowserList list;
+class AndroidBrowserView {
 
-    public JFrame getFrame() {
-        frame = createFrame();
+
+    void drawGui() {
+        JFrame frame = createFrame();
         frame.pack();
         frame.setLocation(200, 200);
         frame.setVisible(true);
-        return frame;
     }
 
-    private static JFrame createFrame() {
+    private JFrame createFrame() {
+        AndroidBrowserModel model;
+        AndroidBrowserList list;
         JFrame frame = new JFrame("Folder selection");
         frame.getContentPane().setLayout(new BorderLayout());
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 
         // create person model and list component
         model = new AndroidBrowserModel();
@@ -35,17 +31,15 @@ public class AndroidBrowserView {
         // setting up the input controls and buttons
         JPanel northPnl = new JPanel();
         frame.getContentPane().add(northPnl, BorderLayout.NORTH);
-        upBtn = new JButton("Up");
-        downBtn = new JButton("Down");
-        selectBtn = new JButton("Select");
+        JButton upBtn = new JButton("Up");
+        JButton downBtn = new JButton("Down");
+        JButton selectBtn = new JButton("Select");
         northPnl.add(upBtn);
         northPnl.add(downBtn);
         northPnl.add(selectBtn);
 
         // handling the add button by adding a person to the list
-        upBtn.addActionListener(a -> {
-            model.levelUp();
-        });
+        upBtn.addActionListener(a -> model.levelUp());
 
         // handling the remove button by removing the selected a person from the list
         downBtn.addActionListener(a -> {
@@ -64,6 +58,7 @@ public class AndroidBrowserView {
                 return;
             }
             model.setMusicFolder(selected);
+            frame.setVisible(false);
         });
         list.setCellRenderer(new AndroidFolderRenderer());
         return frame;

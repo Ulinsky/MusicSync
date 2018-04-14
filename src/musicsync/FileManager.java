@@ -17,7 +17,7 @@ import jmtp.PortableDeviceObject;
 import jmtp.PortableDeviceStorageObject;
 import jmtp.PortableDeviceToHostImpl32;
 
-public class FileManager {
+class FileManager {
 
     @SuppressWarnings("ConstantConditions")
     private static List<File> listFilesForFolder(final File folder) {
@@ -86,21 +86,20 @@ public class FileManager {
         } catch (COMException ex) {
             ex.printStackTrace();
         }
+        device.close();
     }
 
     private static List<PortableDeviceFolderObject> findMusicFolders(PortableDevice device) {
-        if(device==null){
+        if (device == null) {
             return null;
         }
         List<PortableDeviceFolderObject> allMusicFolders = new ArrayList<>();
         //Iterate through root folders
-            Arrays.stream(device.getRootObjects()).forEach((f) -> {
-            Arrays.stream(((PortableDeviceStorageObject) f).getChildObjects()).forEach((s) -> {
-                findMusicFolders(s, allMusicFolders);
-            });
-        });
+        Arrays.stream(device.getRootObjects()).forEach((f) -> Arrays.stream(((PortableDeviceStorageObject) f).getChildObjects()).forEach((s) -> findMusicFolders(s, allMusicFolders)));
+        device.close();
         return allMusicFolders;
     }
+
     //TODO replace these find folder methods with Jlist androidBrowser / androidBrowserModel
     private static void findMusicFolders(Object source, List<PortableDeviceFolderObject> folderList) {
 
@@ -126,7 +125,6 @@ public class FileManager {
                 findMusicFolders(o2, folderList);
             }
         }
-
     }
 
     static String getFolderPath(PortableDeviceObject object) {
@@ -138,7 +136,6 @@ public class FileManager {
             object = object.getParent();
         }
         path.insert(0, object.getName());
-
         return path.toString();
     }
 
@@ -147,11 +144,13 @@ public class FileManager {
             if (o2.getOriginalFileName().equalsIgnoreCase(".nomedia"))
                 return true;
         }
+
         return false;
+
     }
 
     static void sync(String desktopPath, PortableDeviceFolderObject androidPath) {
-         if(desktopPath==null||androidPath==null)return;
+        if (desktopPath == null || androidPath == null) return;
         List<File> desktopMusic = listFilesForFolder(new File(desktopPath));
         List<PortableDeviceObject> androidMusic = listFilesForFolder(androidPath);
 
@@ -174,18 +173,14 @@ public class FileManager {
             }
             return true;
         });
-        androidMissingMusic.forEach((a) -> {
-            copyFileFromComputerToDeviceFolder(androidPath, a);
-        });
+        androidMissingMusic.forEach((a) -> copyFileFromComputerToDeviceFolder(androidPath, a));
 
         desktopMissingMusic.forEach((a) -> copyFileFromDeviceToComputerFolder(a, getDevice(), desktopPath));
-        System.out.println(System.nanoTime() - time2);
-
+        if(getDevice()!=null)getDevice().close();
     }
 
     private static List<PortableDeviceObject> listFilesForFolder(PortableDeviceFolderObject androidPath) {
         ArrayList<PortableDeviceObject> allMusicFiles = new ArrayList<>();
-
         allMusicFiles.addAll(Arrays.asList(androidPath.getChildObjects()));
         return allMusicFiles;
     }
