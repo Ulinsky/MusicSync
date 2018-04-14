@@ -13,34 +13,5 @@ public class Main {
             MusicSyncView.drawGUI();
         }
 
-    /*private static void jMTPeMethodTest()
-    {
-        PortableDeviceManager manager = new PortableDeviceManager();
-        if(manager.getDevices().length==0){
-            System.out.println("No device connected");
-            return;
-        }
-        PortableDevice device = manager.getDevices()[0];
-        // Connect to USB tablet
-        device.open();
-        System.out.println(device.getModel());
-        System.out.println("---------------");
-        // Iterate over deviceObjects
-        for (PortableDeviceObject object : device.getRootObjects())
-        {
-            // If the object is a storage object
-            if (object instanceof PortableDeviceStorageObject)
-            {
-                PortableDeviceStorageObject storage = (PortableDeviceStorageObject) object;
-                for (PortableDeviceObject o2 : storage.getChildObjects())
-                {
-                    System.out.println(o2.getOriginalFileName());
-                }
-            }
-        }
-
-        manager.getDevices()[0].close();
-    }*/
-
 }
 
