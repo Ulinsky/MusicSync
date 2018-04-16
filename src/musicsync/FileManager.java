@@ -149,6 +149,7 @@ class FileManager {
 
     }
 
+    //TODO check size, it could be that the files are too big for current android storage
     static void sync(String desktopPath, PortableDeviceFolderObject androidPath) {
         if (desktopPath == null || androidPath == null) return;
         List<File> desktopMusic = listFilesForFolder(new File(desktopPath));
@@ -157,7 +158,6 @@ class FileManager {
         Stream<PortableDeviceObject> desktopMissingMusic;
         Stream<String> androidMissingMusic;
         //TODO null pointers possible, if desktop music == null|| empty, copy whole android music to desktop, and reverse hold too
-        Long time2 = System.nanoTime();
         androidMissingMusic = desktopMusic.stream().filter((d) -> {
             for (PortableDeviceObject a : androidMusic) {
                 if (a.getOriginalFileName().equalsIgnoreCase(d.getName()))
@@ -174,9 +174,8 @@ class FileManager {
             return true;
         });
         androidMissingMusic.forEach((a) -> copyFileFromComputerToDeviceFolder(androidPath, a));
-
         desktopMissingMusic.forEach((a) -> copyFileFromDeviceToComputerFolder(a, getDevice(), desktopPath));
-        if(getDevice()!=null)getDevice().close();
+        if (getDevice() != null) getDevice().close();
     }
 
     private static List<PortableDeviceObject> listFilesForFolder(PortableDeviceFolderObject androidPath) {

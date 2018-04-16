@@ -6,12 +6,14 @@ import javax.swing.*;
 import java.awt.*;
 
 class AndroidBrowserView {
-
+    private static final int WIDTH = 500;
+    private static final int HEIGHT = 600;
 
     void drawGui() {
         JFrame frame = createFrame();
         frame.pack();
-        frame.setLocation(200, 200);
+        frame.setLocation(200, 100);
+        frame.setMinimumSize(new Dimension(WIDTH,HEIGHT));
         frame.setVisible(true);
     }
 

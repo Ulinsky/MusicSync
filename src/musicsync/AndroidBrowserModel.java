@@ -1,15 +1,13 @@
 package musicsync;
 
-import jmtp.PortableDevice;
 import jmtp.PortableDeviceFolderObject;
 import jmtp.PortableDeviceObject;
 import jmtp.PortableDeviceStorageObject;
 
 import javax.swing.*;
 import javax.swing.event.ListDataEvent;
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 class AndroidBrowserModel extends AbstractListModel<PortableDeviceObject> {
@@ -23,12 +21,13 @@ class AndroidBrowserModel extends AbstractListModel<PortableDeviceObject> {
         if(FileManager.getDevice()==null)return;
         PortableDeviceObject[] rootObjects = FileManager.getDevice().getRootObjects();
         for (PortableDeviceObject folder : rootObjects) {
-            if (folder.getName().equalsIgnoreCase("internal storage")) {
-                PortableDeviceStorageObject internalStorage = (PortableDeviceStorageObject) folder;
+            //TODO make it not hardcoded with internal storage/phone etc. strings
+            if (folder.getName().equalsIgnoreCase("internal storage")||folder.getName().equalsIgnoreCase("phone")) {PortableDeviceStorageObject internalStorage = (PortableDeviceStorageObject) folder;
                 for (PortableDeviceObject subFolder : internalStorage.getChildObjects()) {
                     if (subFolder instanceof PortableDeviceFolderObject) {
                         PortableDeviceFolderObject storage = (PortableDeviceFolderObject) subFolder;
                         folders.add(storage);
+                        folders.sort(Comparator.comparing(PortableDeviceObject::getName));
                     }
                 }
             }

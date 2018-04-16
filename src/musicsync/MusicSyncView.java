@@ -89,7 +89,8 @@ public class MusicSyncView extends JPanel {
         });
 
         syncSongsButton.addActionListener((ActionEvent actionEvent) -> {
-            // FileManager.sync(desktopPath.getText(),null);
+            //TODO implement JList as JDialogue, call .getMusicFolder as parameter for sync
+            // FileManager.sync(desktopPath.getText(), new JDialogue(JList.getMusicFolder);
         });
 
     }
