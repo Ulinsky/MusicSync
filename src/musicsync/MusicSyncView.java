@@ -1,8 +1,11 @@
 package musicsync;
 
+import jmtp.PortableDeviceFolderObject;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.File;
 
 
 public class MusicSyncView extends JPanel {
@@ -11,14 +14,15 @@ public class MusicSyncView extends JPanel {
     private static final int WIDTH = 700;
     private static final int DESKTOP_PATH_FLAG_POS = 0;
     private static final int ANDROID_PATH_FLAG_POS = 1;
-
+    private static final int MUSIC_FOLDER_POS = 0;
+    private final PortableDeviceFolderObject[] musicFolder = new PortableDeviceFolderObject[1];
 
     private MusicSyncView() {
         super(new BorderLayout());
         super.setPreferredSize(new Dimension(WIDTH, HEIGHT));
 
-        JTextField desktopPath = new JTextField("Desktop music folder", 25);
-        JTextField androidPath = new JTextField("Android music folder", 18);
+        JTextField desktopPath = new JTextField("Desktop music folder", WIDTH/30);
+        JTextField androidPath = new JTextField("Android music folder", WIDTH/30);
         boolean[] pathFlags = {false, false};
         desktopPath.setEditable(false);
         androidPath.setEditable(false);
@@ -77,21 +81,25 @@ public class MusicSyncView extends JPanel {
         });
 
         setAndroidFolderButton.addActionListener(actionEvent -> {
-            AndroidBrowserView a = new AndroidBrowserView();
-            a.drawGui();
-            //TODO implement selection like mentioned in https://stackoverflow.com/questions/37629017/java-dialog-with-jlist-and-option-buttons
-            pathFlags[ANDROID_PATH_FLAG_POS] = true;
-            if (pathFlags[DESKTOP_PATH_FLAG_POS]) {
-                syncSongsButton.setBackground(Color.WHITE);
-                syncSongsButton.setText("Sync songs");
-                syncSongsButton.setEnabled(true);
-            }
+            AndroidBrowserView list = new AndroidBrowserView();
+            list.setOnOk(e -> {
+                musicFolder[MUSIC_FOLDER_POS] = list.getSelectedFolder();
+                pathFlags[ANDROID_PATH_FLAG_POS] = true;
+                if (pathFlags[DESKTOP_PATH_FLAG_POS]) {
+                    syncSongsButton.setBackground(Color.WHITE);
+                    syncSongsButton.setText("Sync songs");
+                    syncSongsButton.setEnabled(true);
+                }
+                if (musicFolder[MUSIC_FOLDER_POS] != null)
+                    androidPath.setText(FileManager.getFolderPath(musicFolder[MUSIC_FOLDER_POS]));
+
+            });
+            list.drawGui();
+
+
         });
 
-        syncSongsButton.addActionListener((ActionEvent actionEvent) -> {
-            //TODO implement JList as JDialogue, call .getMusicFolder as parameter for sync
-            // FileManager.sync(desktopPath.getText(), new JDialogue(JList.getMusicFolder);
-        });
+        syncSongsButton.addActionListener((ActionEvent actionEvent) -> FileManager.sync(desktopPath.getText(),musicFolder[MUSIC_FOLDER_POS]));
 
     }
 
@@ -99,6 +107,7 @@ public class MusicSyncView extends JPanel {
         //renders the GUI
         JFrame frame = new JFrame("MusicSync");
         frame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        frame.setLocation(200,100);
         frame.add(new MusicSyncView());
         frame.pack();
         frame.setVisible(true);

@@ -6,18 +6,18 @@ import jmtp.PortableDeviceStorageObject;
 
 import javax.swing.*;
 import javax.swing.event.ListDataEvent;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 class AndroidBrowserModel extends AbstractListModel<PortableDeviceObject> {
 
     private List<PortableDeviceFolderObject> folders;
     private PortableDeviceFolderObject musicFolder;
+    private Stack<List<PortableDeviceFolderObject>> undo;
 
     @SuppressWarnings("ConstantConditions")
     AndroidBrowserModel() {
         this.folders = new ArrayList<>();
+        this.undo = new Stack<>();
         if(FileManager.getDevice()==null)return;
         PortableDeviceObject[] rootObjects = FileManager.getDevice().getRootObjects();
         for (PortableDeviceObject folder : rootObjects) {
@@ -42,8 +42,11 @@ class AndroidBrowserModel extends AbstractListModel<PortableDeviceObject> {
     }
 
     @SuppressWarnings("ConstantConditions")
-    void levelDown(int i) {   //TODO after method is called, go one level deeper
+    void stepInto(int i) {
         PortableDeviceFolderObject folderObject = folders.get(i);
+        List<PortableDeviceFolderObject> copyList = new ArrayList<>();
+        copyList.addAll(folders);
+        undo.push(copyList);
         folders.clear();
         for (PortableDeviceObject subFolder : folderObject.getChildObjects()) {
             if (subFolder instanceof PortableDeviceFolderObject) {
@@ -56,13 +59,15 @@ class AndroidBrowserModel extends AbstractListModel<PortableDeviceObject> {
     }
 
 
-    //TODO probably should also make levelUp
-    void levelUp() {
-        System.out.println("TODO LEVEL UP");
+
+    void goBackToPrevList(){
+        if(undo.empty())return;
+        folders = undo.pop();
+        this.fireContentsChanged(ListDataEvent.CONTENTS_CHANGED,0,folders.size());
     }
 
 
-    public PortableDeviceFolderObject getMusicFolder() {
+    PortableDeviceFolderObject getMusicFolder() {
         return musicFolder;
     }
 

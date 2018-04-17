@@ -50,32 +50,31 @@ class FileManager {
         }
     }
 
-    String findAndroidPath() {
-        PortableDeviceManager manager = new PortableDeviceManager();
-        if (manager.getDevices().length == 0) {
-            showMessageDialog(null, "No connected android device found.");
-            return null;
-        }
-        //First connected device (support multiple in future?)
-        PortableDevice device = manager.getDevices()[0];
-        // Connect to USB device
-        device.open();
-        PortableDeviceFolderObject musicFolder = (PortableDeviceFolderObject) findMusicFolders(device);
-        if (musicFolder == null) {
-            showMessageDialog(null, "No music folder found.");
-            return null;
-        }
-        manager.getDevices()[0].close();
-        return device.getFriendlyName() + "\\" + musicFolder.getParent().getName() + "\\" + musicFolder.getName(); //TODO make it NOT hardcoded
-    }
+//    String findAndroidPath() {
+//        PortableDeviceManager manager = new PortableDeviceManager();
+//        if (manager.getDevices().length == 0) {
+//            showMessageDialog(null, "No connected android device found.");
+//            return null;
+//        }
+//        //First connected device (support multiple in future?)
+//        PortableDevice device = manager.getDevices()[0];
+//        // Connect to USB device
+//        device.open();
+//        PortableDeviceFolderObject musicFolder = (PortableDeviceFolderObject) findMusicFolders(device);
+//        if (musicFolder == null) {
+//            showMessageDialog(null, "No music folder found.");
+//            return null;
+//        }
+//        manager.getDevices()[0].close();
+//        return device.getFriendlyName() + "\\" + musicFolder.getParent().getName() + "\\" + musicFolder.getName(); //TODO make it NOT hardcoded
+//    }
 
     private static void copyFileFromComputerToDeviceFolder(PortableDeviceFolderObject targetFolder, String desktopPath) {
-        BigInteger bigInteger1 = new BigInteger("123456789");
         File file = new File(desktopPath);
-        try { //TODO clean up method to not print placeholders ("jj" and 123456789)
-            targetFolder.addAudioObject(file, "jj", "jj", bigInteger1);
+        try {
+            targetFolder.addAudioObject(file, null, file.getName(), BigInteger.valueOf(file.length()));
         } catch (Exception e) {
-            System.out.println("Exception e = " + e);
+            e.printStackTrace();
         }
     }
 
@@ -89,7 +88,7 @@ class FileManager {
         device.close();
     }
 
-    private static List<PortableDeviceFolderObject> findMusicFolders(PortableDevice device) {
+    /*private static List<PortableDeviceFolderObject> findMusicFolders(PortableDevice device) {
         if (device == null) {
             return null;
         }
@@ -98,9 +97,9 @@ class FileManager {
         Arrays.stream(device.getRootObjects()).forEach((f) -> Arrays.stream(((PortableDeviceStorageObject) f).getChildObjects()).forEach((s) -> findMusicFolders(s, allMusicFolders)));
         device.close();
         return allMusicFolders;
-    }
+    }*/
 
-    //TODO replace these find folder methods with Jlist androidBrowser / androidBrowserModel
+   /* //TODO replace these find folder methods with Jlist androidBrowser / androidBrowserModel
     private static void findMusicFolders(Object source, List<PortableDeviceFolderObject> folderList) {
 
         if (source instanceof PortableDeviceFolderObject) {//TODO storage.getName().equals("Music") || storage.getName().equals("music")) {
@@ -125,7 +124,7 @@ class FileManager {
                 findMusicFolders(o2, folderList);
             }
         }
-    }
+    }*/
 
     static String getFolderPath(PortableDeviceObject object) {
         StringBuilder path = new StringBuilder();
@@ -136,10 +135,14 @@ class FileManager {
             object = object.getParent();
         }
         path.insert(0, object.getName());
+        PortableDevice d = getDevice();
+        if(d==null)return path.toString();
+        path.insert(0, '/');
+        path.insert(0,getDevice().getFriendlyName());
         return path.toString();
     }
 
-    private static boolean hasNoMedia(PortableDeviceFolderObject object) {
+   /* private static boolean hasNoMedia(PortableDeviceFolderObject object) {
         for (PortableDeviceObject o2 : object.getChildObjects()) {
             if (o2.getOriginalFileName().equalsIgnoreCase(".nomedia"))
                 return true;
@@ -147,7 +150,7 @@ class FileManager {
 
         return false;
 
-    }
+    }*/
 
     //TODO check size, it could be that the files are too big for current android storage
     static void sync(String desktopPath, PortableDeviceFolderObject androidPath) {

@@ -1,24 +1,30 @@
 package musicsync;
 
+import jmtp.PortableDeviceFolderObject;
 import jmtp.PortableDeviceObject;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 class AndroidBrowserView {
     private static final int WIDTH = 500;
     private static final int HEIGHT = 600;
+    private AndroidBrowserModel model;
+    private ActionListener okEvent;
 
     void drawGui() {
         JFrame frame = createFrame();
         frame.pack();
         frame.setLocation(200, 100);
-        frame.setMinimumSize(new Dimension(WIDTH,HEIGHT));
+        frame.setMinimumSize(new Dimension(WIDTH, HEIGHT));
         frame.setVisible(true);
     }
 
     private JFrame createFrame() {
-        AndroidBrowserModel model;
         AndroidBrowserList list;
         JFrame frame = new JFrame("Folder selection");
         frame.getContentPane().setLayout(new BorderLayout());
@@ -33,15 +39,15 @@ class AndroidBrowserView {
         // setting up the input controls and buttons
         JPanel northPnl = new JPanel();
         frame.getContentPane().add(northPnl, BorderLayout.NORTH);
-        JButton upBtn = new JButton("Up");
-        JButton downBtn = new JButton("Down");
-        JButton selectBtn = new JButton("Select");
+        JButton upBtn = new JButton("Back");
+        JButton downBtn = new JButton("Go into");
+        JButton selectBtn = new JButton("Select folder");
         northPnl.add(upBtn);
         northPnl.add(downBtn);
         northPnl.add(selectBtn);
 
         // handling the add button by adding a person to the list
-        upBtn.addActionListener(a -> model.levelUp());
+        upBtn.addActionListener(a -> model.goBackToPrevList());
 
         // handling the remove button by removing the selected a person from the list
         downBtn.addActionListener(a -> {
@@ -49,7 +55,7 @@ class AndroidBrowserView {
             if (selected < 0) {
                 return;
             }
-            model.levelDown(selected);
+            model.stepInto(selected);
         });
 
 
@@ -60,19 +66,35 @@ class AndroidBrowserView {
                 return;
             }
             model.setMusicFolder(selected);
+            handleOkButtonClick(a);
             frame.setVisible(false);
+        });
+        list.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                JList list = (JList) evt.getSource();
+                if (evt.getClickCount() > 1) {
+                    // Multi-click detected
+                    int index = list.locationToIndex(evt.getPoint());
+                    model.stepInto(index);
+                }
+            }
         });
         list.setCellRenderer(new AndroidFolderRenderer());
         return frame;
     }
+     PortableDeviceFolderObject getSelectedFolder(){
+        return model.getMusicFolder();
+    }
+    void setOnOk(ActionListener event){ okEvent = event; }
 
-    @SuppressWarnings("unused")
+    private void handleOkButtonClick(ActionEvent e){
+        if(okEvent != null){ okEvent.actionPerformed(e);
+        }
+    }
+
     private static class AndroidFolderRenderer implements ListCellRenderer<PortableDeviceObject> {
         private final JLabel label;
 
-        /**
-         * Constructor setting up the label used as rendering component.
-         */
         AndroidFolderRenderer() {
             label = new JLabel();
             label.setOpaque(true);
@@ -91,4 +113,5 @@ class AndroidBrowserView {
         }
 
     }
+
 }
