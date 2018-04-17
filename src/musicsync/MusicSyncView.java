@@ -17,8 +17,8 @@ public class MusicSyncView extends JPanel {
     private static final int DESKTOP_PATH_FLAG_POS = 0;
     private static final int ANDROID_PATH_FLAG_POS = 1;
     private static final int MUSIC_FOLDER_POS = 0;
-
-
+    private final JTextArea desktopPreview;
+    private final JTextArea androidPreview;
     private MusicSyncView() {
         super(new BorderLayout());
         super.setPreferredSize(new Dimension(WIDTH, HEIGHT));
@@ -30,11 +30,11 @@ public class MusicSyncView extends JPanel {
         desktopPath.setEditable(false);
         androidPath.setEditable(false);
 
-        JTextPane desktopPreview = new JTextPane();
+        desktopPreview = new JTextArea();
         desktopPreview.setEditable(false);
         desktopPreview.setPreferredSize(new Dimension((int) (WIDTH * 0.4), (int) (HEIGHT * 0.7)));
 
-        JTextPane androidPreview = new JTextPane();
+        androidPreview = new JTextArea();
         androidPreview.setEditable(false);
         androidPreview.setPreferredSize(new Dimension((int) (WIDTH * 0.4), (int) (HEIGHT * 0.7)));
 
@@ -45,6 +45,7 @@ public class MusicSyncView extends JPanel {
 
 
         JPanel middle = new JPanel();
+
         middle.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
         middle.add(new JScrollPane(desktopPreview), BorderLayout.LINE_START);
         middle.add(new JScrollPane(androidPreview), BorderLayout.LINE_END);
@@ -66,7 +67,7 @@ public class MusicSyncView extends JPanel {
         this.add(middle, BorderLayout.CENTER);
         this.add(bottom, BorderLayout.SOUTH);
 
-        setDesktopFolderButton.addActionListener(actionEvent -> {
+        setDesktopFolderButton.addActionListener(actionEvent -> EventQueue.invokeLater(() -> {
             JFileChooser chooser = new JFileChooser();
             chooser.setAcceptAllFileFilterUsed(false);
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY); //choose only folders
@@ -78,32 +79,31 @@ public class MusicSyncView extends JPanel {
                 if (pathFlags[ANDROID_PATH_FLAG_POS]) {
                     enableMusicSyncButton(syncSongsButton);
                 }
-                updatePreview(desktopPreview, new File(desktopPath.getText()));
+                updateDesktopPreview(new File(desktopPath.getText()));
             }
-        });
+        }));
 
         setAndroidFolderButton.addActionListener(actionEvent -> {
             if (FileManager.getDevice() == null) return;
             EventQueue.invokeLater(() -> {
                 AndroidBrowserView list = new AndroidBrowserView();
-                list.setOnOk(e -> {
+                list.drawGui();
+                list.setOnSelection(e -> {
                     musicFolder[MUSIC_FOLDER_POS] = list.getSelectedFolder();
-                    if (musicFolder[MUSIC_FOLDER_POS] != null) {
-                        androidPath.setText(FileManager.getFolderPath(musicFolder[MUSIC_FOLDER_POS]));
-                        MusicSyncView.this.updatePreview(androidPreview, musicFolder[MUSIC_FOLDER_POS]);
-                    }
+                    androidPath.setText(FileManager.getFolderPath(musicFolder[MUSIC_FOLDER_POS]));
+                    updateAndroidPreview(musicFolder[MUSIC_FOLDER_POS]);
                     pathFlags[ANDROID_PATH_FLAG_POS] = true;
                     if (pathFlags[DESKTOP_PATH_FLAG_POS]) {
-                        MusicSyncView.this.enableMusicSyncButton(syncSongsButton);
+                        enableMusicSyncButton(syncSongsButton);
                     }
                 });
-                list.drawGui();
+
             });
         });
         syncSongsButton.addActionListener((ActionEvent actionEvent) -> EventQueue.invokeLater(() -> {
             FileManager.sync(desktopPath.getText(), musicFolder[MUSIC_FOLDER_POS]);
-            updatePreview(desktopPreview, new File(desktopPath.getText()));
-            updatePreview(androidPreview, musicFolder[MUSIC_FOLDER_POS]);
+            updateDesktopPreview(new File(desktopPath.getText()));
+            updateAndroidPreview(musicFolder[MUSIC_FOLDER_POS]);
         }));
     }
 
@@ -119,22 +119,22 @@ public class MusicSyncView extends JPanel {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    private void updatePreview(JTextPane previewArea, PortableDeviceFolderObject androidFolder) {
+    private void updateAndroidPreview(PortableDeviceFolderObject androidFolder) {
         StringBuilder sb = new StringBuilder();
         for (PortableDeviceObject obj : FileManager.listFilesForFolder(androidFolder)) {
             sb.append(obj.getOriginalFileName()).append("\n");
         }
         if (sb.length() == 0) sb.append("Selected folder contains no songs.");
-        previewArea.setText(sb.toString());
+        androidPreview.setText(sb.toString());
     }
 
-    private void updatePreview(JTextPane previewArea, File folder) {
+    private void updateDesktopPreview(File folder) {
         StringBuilder sb = new StringBuilder();
         for (File f : FileManager.listFilesForFolder(folder)) {
             sb.append(f.getName()).append("\n");
         }
         if (sb.length() == 0) sb.append("Selected folder contains no songs.");
-        previewArea.setText(sb.toString());
+        desktopPreview.setText(sb.toString());
     }
 
     private void enableMusicSyncButton(JButton syncSongsButton) {

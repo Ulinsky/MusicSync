@@ -66,14 +66,13 @@ class AndroidBrowserView {
                 return;
             }
             model.setMusicFolder(selected);
-            handleOkButtonClick(a);
+            handleSelection(a);
             frame.setVisible(false);
         });
         list.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
                 JList list = (JList) evt.getSource();
                 if (evt.getClickCount() > 1) {
-                    // multi-click detected
                     int index = list.locationToIndex(evt.getPoint());
                     model.stepInto(index);
                 }
@@ -87,11 +86,11 @@ class AndroidBrowserView {
         return model.getMusicFolder();
     }
 
-    void setOnOk(ActionListener event) {
+    void setOnSelection(ActionListener event) {
         okEvent = event;
     }
 
-    private void handleOkButtonClick(ActionEvent e) {
+    private void handleSelection(ActionEvent e) {
         if (okEvent != null) {
             okEvent.actionPerformed(e);
         }
