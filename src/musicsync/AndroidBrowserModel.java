@@ -6,7 +6,10 @@ import jmtp.PortableDeviceStorageObject;
 
 import javax.swing.*;
 import javax.swing.event.ListDataEvent;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Stack;
 
 class AndroidBrowserModel extends AbstractListModel<PortableDeviceObject> {
 
@@ -18,11 +21,11 @@ class AndroidBrowserModel extends AbstractListModel<PortableDeviceObject> {
     AndroidBrowserModel() {
         this.folders = new ArrayList<>();
         this.undo = new Stack<>();
-        if(FileManager.getDevice()==null)return;
+        if (FileManager.getDevice() == null) return;
         PortableDeviceObject[] rootObjects = FileManager.getDevice().getRootObjects();
         for (PortableDeviceObject folder : rootObjects) {
-            //TODO make it not hardcoded with internal storage/phone etc. strings
-            if (folder.getName().equalsIgnoreCase("internal storage")||folder.getName().equalsIgnoreCase("phone")) {PortableDeviceStorageObject internalStorage = (PortableDeviceStorageObject) folder;
+            if (folder instanceof PortableDeviceStorageObject) {
+                PortableDeviceStorageObject internalStorage = (PortableDeviceStorageObject) folder;
                 for (PortableDeviceObject subFolder : internalStorage.getChildObjects()) {
                     if (subFolder instanceof PortableDeviceFolderObject) {
                         PortableDeviceFolderObject storage = (PortableDeviceFolderObject) subFolder;
@@ -32,6 +35,7 @@ class AndroidBrowserModel extends AbstractListModel<PortableDeviceObject> {
                 }
             }
         }
+
         FileManager.getDevice().close();
     }
 
@@ -54,16 +58,15 @@ class AndroidBrowserModel extends AbstractListModel<PortableDeviceObject> {
                 folders.add(storage);
             }
         }
-        this.fireContentsChanged(ListDataEvent.CONTENTS_CHANGED,0,folders.size());
-        if(FileManager.getDevice()!=null)FileManager.getDevice().close();
+        this.fireContentsChanged(ListDataEvent.CONTENTS_CHANGED, 0, folders.size());
+        if (FileManager.getDevice() != null) FileManager.getDevice().close();
     }
 
 
-
-    void goBackToPrevList(){
-        if(undo.empty())return;
+    void goBackToPrevList() {
+        if (undo.empty()) return;
         folders = undo.pop();
-        this.fireContentsChanged(ListDataEvent.CONTENTS_CHANGED,0,folders.size());
+        this.fireContentsChanged(ListDataEvent.CONTENTS_CHANGED, 0, folders.size());
     }
 
 
@@ -72,7 +75,7 @@ class AndroidBrowserModel extends AbstractListModel<PortableDeviceObject> {
     }
 
     void setMusicFolder(int i) {
-        if(i<0||i>folders.size())return;
+        if (i < 0 || i > folders.size()) return;
         musicFolder = folders.get(i);
     }
 

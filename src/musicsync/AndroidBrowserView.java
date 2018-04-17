@@ -11,7 +11,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 class AndroidBrowserView {
-    private static final int WIDTH = 500;
+    private static final int WIDTH = 400;
     private static final int HEIGHT = 600;
     private AndroidBrowserModel model;
     private ActionListener okEvent;
@@ -46,10 +46,10 @@ class AndroidBrowserView {
         northPnl.add(downBtn);
         northPnl.add(selectBtn);
 
-        // handling the add button by adding a person to the list
+        //moves back to previous folders
         upBtn.addActionListener(a -> model.goBackToPrevList());
 
-        // handling the remove button by removing the selected a person from the list
+        //tunnels into a folder
         downBtn.addActionListener(a -> {
             int selected = list.getSelectedIndex();
             if (selected < 0) {
@@ -59,7 +59,7 @@ class AndroidBrowserView {
         });
 
 
-        // handling the update button by changing the data of the selected a person
+        //selects a folder as the music folder and hides the gui
         selectBtn.addActionListener(a -> {
             int selected = list.getSelectedIndex();
             if (selected < 0) {
@@ -73,22 +73,27 @@ class AndroidBrowserView {
             public void mouseClicked(MouseEvent evt) {
                 JList list = (JList) evt.getSource();
                 if (evt.getClickCount() > 1) {
-                    // Multi-click detected
+                    // multi-click detected
                     int index = list.locationToIndex(evt.getPoint());
                     model.stepInto(index);
                 }
             }
         });
-        list.setCellRenderer(new AndroidFolderRenderer());
+        list.setCellRenderer(new AndroidFolderRenderer()); //using renderer to "map" PortableDeviceObjects to Strings
         return frame;
     }
-     PortableDeviceFolderObject getSelectedFolder(){
+
+    PortableDeviceFolderObject getSelectedFolder() {
         return model.getMusicFolder();
     }
-    void setOnOk(ActionListener event){ okEvent = event; }
 
-    private void handleOkButtonClick(ActionEvent e){
-        if(okEvent != null){ okEvent.actionPerformed(e);
+    void setOnOk(ActionListener event) {
+        okEvent = event;
+    }
+
+    private void handleOkButtonClick(ActionEvent e) {
+        if (okEvent != null) {
+            okEvent.actionPerformed(e);
         }
     }
 
@@ -101,9 +106,8 @@ class AndroidBrowserView {
         }
 
         @Override
-        public Component getListCellRendererComponent(JList<? extends PortableDeviceObject> list, PortableDeviceObject value, int index,
-                                                      boolean isSelected, boolean cellHasFocus) {
-            label.setText(value.getName());
+        public Component getListCellRendererComponent(JList<? extends PortableDeviceObject> list, PortableDeviceObject value, int index, boolean isSelected, boolean cellHasFocus) {
+            label.setText("          " + value.getName());
             if (isSelected) {
                 label.setBackground(list.getSelectionBackground());
             } else {
