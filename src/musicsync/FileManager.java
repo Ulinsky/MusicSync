@@ -18,6 +18,8 @@ import jmtp.PortableDeviceStorageObject;
 import jmtp.PortableDeviceToHostImpl32;
 
 class FileManager {
+	
+	private static String[] fileEndings= {".mp3",".wav",".wma"};
 
 
     static PortableDevice getDevice() {
@@ -133,15 +135,26 @@ class FileManager {
         return false;
     }
 
+    /*
+     * Searches the files recursively ! Got be a problem when to many folders
+     * 
+     */
     @SuppressWarnings("ConstantConditions")
     static List<File> listFilesForFolder(File folder) {
         List<File> songs = new ArrayList<>();
         for ( File fileEntry : folder.listFiles()) { //for each file in the folder
             if (fileEntry.isDirectory()) { //another folder found, recursive call
                 songs.addAll(listFilesForFolder(fileEntry));
-            } else if (fileEntry.getName().contains(".mp3")) {  //only files with .mp3 accepted
-                songs.add(fileEntry);
-            }
+            } 
+            
+           for (int i = 0; i < fileEndings.length; i++) //now i can add new FileTypes just by increasing the Array
+           {  
+        	   if (fileEntry.getName().endsWith(fileEndings[i])) {
+        		   songs.add(fileEntry);
+        	   }
+              
+           
+           }
         }
         return songs;
     }
